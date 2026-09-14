@@ -1,0 +1,22 @@
+version: "1.0"
+execution:
+  mode: autonomous
+  auto_approve:
+    filesystem:
+      create: true
+      modify: true
+      delete: false # Safety guard against deleting existing root assets
+      paths:
+        - "track-atomic/**"
+        - "track-sprint/**"
+        - "mock-bin/**"
+    shell:
+      allow:
+        - "mkdir -p *"
+        - "touch *"
+        - "chmod +x *"
+        - "bats *"
+        - "pytest *"
+      deny:
+        - "rm -rf *"
+        - "sudo *"

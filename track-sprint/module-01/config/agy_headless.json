@@ -1,0 +1,10 @@
+{
+  "headless_default": true,
+  "offline_mode": true,
+  "mock_binary_path": "mock-bin/agy",
+  "required_flags": ["--headless", "--json"],
+  "timeout_seconds": 30,
+  "schema_version": "2.0",
+  "required_output_keys": ["status", "metadata"],
+  "required_metadata_keys": ["status", "version", "headless"]
+}
