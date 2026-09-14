@@ -1,0 +1,376 @@
+#!/usr/bin/env python3
+"""
+mock-bin/agy: Offline non-interactive mock executable for Antigravity CLI 2.0.
+
+Provides deterministic responses for auth, run, and task subcommands
+without making live API calls or network connections. Enforces non-interactive
+headless execution patterns as required by the grading autograder.
+"""
+
+import sys
+import os
+import json
+import time
+import signal
+
+# Clean signal handling for SIGINT and SIGTERM (Day 26 compliance)
+def sig_handler(signum, frame):
+    err = {
+        "code": "TERMINATED",
+        "message": f"Process interrupted by signal {signum}",
+        "status": "TERMINATED"
+    }
+    sys.stderr.write(json.dumps(err) + "\n")
+    sys.exit(128 + signum)
+
+signal.signal(signal.SIGINT, sig_handler)
+signal.signal(signal.SIGTERM, sig_handler)
+
+KNOWN_SUBCOMMANDS = {
+    "auth", "run", "task", "agent", "session", "status",
+    "batch", "stream", "version", "config", "help"
+}
+
+KNOWN_FLAGS_NO_ARG = {
+    "--headless", "--json", "--print", "-p", "-i", "--prompt-interactive",
+    "--offline", "-c", "--continue", "--sandbox", "--dangerously-skip-permissions",
+    "--simulate-error", "--fail", "--help", "-h", "--version", "-v",
+    "--tool-call"
+}
+
+KNOWN_FLAGS_WITH_ARG = {
+    "--output-format", "--input-format", "--payload", "--workdir",
+    "--task", "--category", "--model", "--prompt", "--config",
+    "--timeout", "--print-timeout", "--fixture", "--conversation",
+    "--project", "--mode", "--add-dir", "--json-schema", "--effort"
+}
+
+def fail_invalid_arg(message: str):
+    """Outputs structured error JSON to stderr and exits with status 2 (Day 7)."""
+    payload = {
+        "code": "INVALID_ARGUMENT",
+        "message": message,
+        "status": "ERROR"
+    }
+    sys.stderr.write(json.dumps(payload) + "\n")
+    sys.exit(2)
+
+def fail_simulated_error(message: str):
+    """Simulates internal CLI error (Day 10)."""
+    payload = {
+        "code": "EXECUTION_ERROR",
+        "message": message,
+        "status": "ERROR"
+    }
+    sys.stderr.write(json.dumps(payload) + "\n")
+    sys.exit(1)
+
+def print_help():
+    help_text = """Usage: agy <subcommand> [flags]
+
+Offline Mock Antigravity CLI 2.0 for Agentic Learning Monorepo.
+
+Subcommands:
+  auth       Manage authentication and mock session tokens
+  run        Execute Gemini Spark agent prompts and tool calls headlessly
+  task       Manage and dispatch autonomous tasks
+  agent      Dispatch specialized agent workflows
+  session    Manage agent sessions (start, stop, status)
+  status     Poll asynchronous task status
+  batch      Dispatch and track batch agent executions
+  stream     Stream Gemini Spark agent token chunks (NDJSON)
+  version    Show version information
+  help       Show help documentation
+
+Flags:
+  --headless                     Execute in non-interactive headless mode
+  --json                         Emit output strictly as formatted JSON
+  --output-format <format>       Output format (json, text, stream-json)
+  --input-format <format>        Input format (text, stream-json)
+  --payload <json-string>        Structured Spark input payload
+  --workdir <dir>                Target sandbox working directory
+  --task <task-name>             Task identifier
+  --category <category-name>     Task categorization
+  --model <model-name>           Target Gemini model (e.g. gemini-spark)
+  --fixture <path>               Load mock response fixture from path
+  --version, -v                  Show version
+  --help, -h                     Show help
+"""
+    sys.stdout.write(help_text)
+    sys.exit(0)
+
+def main():
+    # Enforce argument presence (Day 7: status equals 2 on missing/invalid arguments)
+    if len(sys.argv) == 1:
+        fail_invalid_arg("Missing command arguments. Usage: agy <subcommand> [flags]")
+
+    args = sys.argv[1:]
+
+    # Check for help flags
+    if "-h" in args or "--help" in args or (len(args) == 1 and args[0] == "help"):
+        print_help()
+
+    # Fixture override mechanism (Day 23)
+    fixture_path = os.environ.get("AGY_FIXTURE_PATH")
+    if "--fixture" in args:
+        idx = args.index("--fixture")
+        if idx + 1 < len(args):
+            fixture_path = args[idx + 1]
+        else:
+            fail_invalid_arg("Option --fixture requires a file path argument")
+
+    if fixture_path:
+        if os.path.isfile(fixture_path):
+            try:
+                with open(fixture_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                sys.stdout.write(content.strip() + "\n")
+                sys.exit(0)
+            except Exception as e:
+                fail_simulated_error(f"Failed to read fixture from {fixture_path}: {e}")
+        else:
+            fail_invalid_arg(f"Specified fixture path does not exist: {fixture_path}")
+
+    # Parse options and positional arguments
+    parsed_flags = set()
+    options_with_vals = {}
+    positional_args = []
+    i = 0
+
+    while i < len(args):
+        arg = args[i]
+        if arg.startswith("-"):
+            if "=" in arg:
+                opt_name, opt_val = arg.split("=", 1)
+                if opt_name in KNOWN_FLAGS_WITH_ARG:
+                    parsed_flags.add(opt_name)
+                    options_with_vals[opt_name] = opt_val
+                elif opt_name in KNOWN_FLAGS_NO_ARG:
+                    fail_invalid_arg(f"Option {opt_name} does not take a parameter")
+                else:
+                    fail_invalid_arg(f"Unrecognized option: {opt_name}")
+            elif arg in KNOWN_FLAGS_NO_ARG:
+                parsed_flags.add(arg)
+            elif arg in KNOWN_FLAGS_WITH_ARG:
+                if i + 1 >= len(args) or args[i + 1].startswith("-"):
+                    fail_invalid_arg(f"Option {arg} requires an argument")
+                parsed_flags.add(arg)
+                options_with_vals[arg] = args[i + 1]
+                i += 1
+            else:
+                fail_invalid_arg(f"Unrecognized option: {arg}")
+        else:
+            positional_args.append(arg)
+        i += 1
+
+    # Check for version flag
+    if "-v" in parsed_flags or "--version" in parsed_flags:
+        if "--json" in parsed_flags or options_with_vals.get("--output-format") == "json":
+            res = {
+                "version": "2.0.0-mock",
+                "cli": "antigravity",
+                "runtime": "Antigravity 2.0",
+                "model_default": "Gemini Spark",
+                "status": "COMPLETED",
+                "metadata": {
+                    "status": "COMPLETED",
+                    "version": "2.0.0-mock",
+                    "headless": True
+                }
+            }
+            sys.stdout.write(json.dumps(res, indent=2) + "\n")
+        else:
+            sys.stdout.write("antigravity CLI v2.0.0-mock (offline CI mock)\n")
+        sys.exit(0)
+
+    # Simulated error flag (Day 10)
+    if "--fail" in parsed_flags or "--simulate-error" in parsed_flags:
+        fail_simulated_error("Mock error condition triggered by caller")
+
+    # Validate positional subcommands
+    if not positional_args:
+        fail_invalid_arg("No subcommand provided. Usage: agy <subcommand> [flags]")
+
+    subcommand = positional_args[0]
+    sub_subcommands = positional_args[1:]
+
+    if subcommand not in KNOWN_SUBCOMMANDS:
+        fail_invalid_arg(f"Unknown subcommand: '{subcommand}'")
+
+    headless = "--headless" in parsed_flags
+    json_mode = "--json" in parsed_flags or options_with_vals.get("--output-format") == "json" or headless
+
+    # Day 5: Non-interactive session spawning guard
+    # "Starter bats test hangs indefinitely because agy session start omits --headless and awaits stdin."
+    if subcommand == "session" and "start" in sub_subcommands and not headless:
+        try:
+            # Simulate waiting indefinitely on stdin
+            time.sleep(30)
+        except KeyboardInterrupt:
+            sys.exit(130)
+
+    # Workdir check (Day 14)
+    workdir = options_with_vals.get("--workdir")
+    if workdir and not os.path.exists(workdir):
+        try:
+            os.makedirs(workdir, exist_ok=True)
+        except OSError:
+            pass
+
+    # Payload check (Day 8 & Day 15)
+    raw_payload = options_with_vals.get("--payload")
+    parsed_payload = None
+    if raw_payload:
+        try:
+            parsed_payload = json.loads(raw_payload)
+        except json.JSONDecodeError:
+            parsed_payload = raw_payload
+
+    # Output generation based on subcommand
+    if subcommand == "auth":
+        action = sub_subcommands[0] if sub_subcommands else "status"
+        response = {
+            "status": "COMPLETED",
+            "action": action,
+            "authenticated": True,
+            "user": "developer@example.internal",
+            "project": options_with_vals.get("--project", "agentic-learning-sandbox"),
+            "session_token": "mock-auth-token-9988-xyz",
+            "metadata": {
+                "status": "COMPLETED",
+                "mode": "offline-mock",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+    elif subcommand == "run":
+        response = {
+            "task_id": "mock-run-task-1001",
+            "status": "COMPLETED",
+            "output": "Mock Antigravity 2.0 execution completed successfully.",
+            "result": {
+                "status": "COMPLETED",
+                "response": "Gemini Spark generated response in offline mock mode.",
+                "finish_reason": "STOP"
+            },
+            "metadata": {
+                "status": "COMPLETED",
+                "timestamp": "2026-09-14T05:30:00Z",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+        if parsed_payload is not None:
+            response["result"]["payload"] = parsed_payload
+        if workdir:
+            response["metadata"]["workdir"] = workdir
+    elif subcommand in ("task", "agent"):
+        action = sub_subcommands[0] if sub_subcommands else "dispatch"
+        task_id = options_with_vals.get("--task", "mock-task-2002")
+        category = options_with_vals.get("--category", "general")
+        response = {
+            "task_id": task_id,
+            "status": "COMPLETED",
+            "category": category,
+            "action": action,
+            "result": {
+                "status": "COMPLETED",
+                "details": "Mock autonomous task executed successfully."
+            },
+            "metadata": {
+                "status": "COMPLETED",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+    elif subcommand == "session":
+        action = sub_subcommands[0] if sub_subcommands else "start"
+        response = {
+            "session_id": "mock-session-3003",
+            "session_token": "mock-session-token-3003",
+            "action": action,
+            "status": "COMPLETED",
+            "metadata": {
+                "status": "COMPLETED",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+    elif subcommand == "status":
+        response = {
+            "task_id": options_with_vals.get("--task", "mock-task-1001"),
+            "status": "COMPLETED",
+            "metadata": {
+                "status": "COMPLETED",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+    elif subcommand == "batch":
+        response = {
+            "batch_id": "mock-batch-4004",
+            "status": "COMPLETED",
+            "total_tasks": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "summary": {
+                "status": "COMPLETED"
+            },
+            "metadata": {
+                "status": "COMPLETED",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+    elif subcommand == "stream":
+        # Day 11: streaming JSON parser handles newline-delimited JSON chunks
+        chunks = [
+            {"chunk": 1, "text": "Gemini ", "status": "STREAMING", "metadata": {"status": "STREAMING"}},
+            {"chunk": 2, "text": "Spark ", "status": "STREAMING", "metadata": {"status": "STREAMING"}},
+            {"chunk": 3, "text": "response completed.", "status": "COMPLETED", "metadata": {"status": "COMPLETED"}}
+        ]
+        for chunk in chunks:
+            sys.stdout.write(json.dumps(chunk) + "\n")
+            sys.stdout.flush()
+        sys.exit(0)
+    elif subcommand == "version":
+        response = {
+            "version": "2.0.0-mock",
+            "cli": "antigravity",
+            "runtime": "Antigravity 2.0",
+            "status": "COMPLETED",
+            "metadata": {
+                "status": "COMPLETED",
+                "version": "2.0.0-mock",
+                "headless": headless
+            }
+        }
+    elif subcommand == "config":
+        response = {
+            "status": "COMPLETED",
+            "headless_default": True,
+            "offline_mode": True,
+            "metadata": {
+                "status": "COMPLETED",
+                "version": "2.0.0-mock"
+            }
+        }
+    else:
+        response = {
+            "status": "COMPLETED",
+            "command": subcommand,
+            "metadata": {
+                "status": "COMPLETED"
+            }
+        }
+
+    # Emit output (Day 2: pure unescaped JSON, key metadata.status equals COMPLETED)
+    if json_mode or options_with_vals.get("--output-format") != "text":
+        sys.stdout.write(json.dumps(response, indent=2) + "\n")
+    else:
+        sys.stdout.write(f"status: {response.get('status', 'COMPLETED')}\n")
+
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()

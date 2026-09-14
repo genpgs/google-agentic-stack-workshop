@@ -1,0 +1,28 @@
+{
+  "name": "Google Agentic Stack Workshop (Python 3.11)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": [
+          "track-sprint"
+        ],
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "bats-community.bats",
+        "tamasfe.even-better-toml"
+      ]
+    }
+  },
+  "remoteEnv": {
+    "PATH": "${containerWorkspaceFolder}/mock-bin:${containerEnv:PATH}",
+    "AGY_OFFLINE_MODE": "1"
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y bats jq && pip install --upgrade pip pytest jsonschema pre-commit && git config --global --add safe.directory ${containerWorkspaceFolder} && (pre-commit install || true)"
+}
