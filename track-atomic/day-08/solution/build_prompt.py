@@ -5,7 +5,7 @@ import os
 import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 MOCK_BIN = REPO_ROOT / "mock-bin"
 ROLE_TAG = '<spark:role name="assistant">'
 USER_INPUT = 'Say "hello world"'
