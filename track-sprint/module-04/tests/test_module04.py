@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-04/tests/test_autograder_core.py
+track-sprint/module-04/tests/test_module04.py
 
-Pytest test harness for Sprint Module 04: Enterprise Autograder & Offline CI/CD Verification Suite.
+Pytest test harness for Sprint Module 04: End-to-End Autonomous Software Factory.
 All tests run strictly offline — no live API calls, no network egress.
 """
 import json
@@ -16,11 +16,11 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MOCK_BIN = REPO_ROOT / "mock-bin"
-SRC_DIR = Path(__file__).resolve().parents[1] / "src"
-sys.path.insert(0, str(SRC_DIR))
+WORKSPACE_DIR = Path(__file__).resolve().parents[1] / "workspace"
+sys.path.insert(0, str(WORKSPACE_DIR))
 
-from autograder_core import AutograderCore
-from bats_runner import run_single_bats, run_all_atomic_tests
+from orchestrator import AutograderCore
+from spark_bridge import run_single_bats, run_all_atomic_tests
 from grade_reporter import GradeReporter
 from sandbox_guard import SandboxGuard
 

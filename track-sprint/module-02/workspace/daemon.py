@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-02/src/agent_dispatcher.py
+track-sprint/module-02/workspace/daemon.py
 
 Autonomous agent dispatcher using Gemini Spark prompts and headless execution.
 Orchestrates multi-turn conversations with stateful history and local tool calls.
@@ -16,9 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 MOCK_BIN = REPO_ROOT / "mock-bin"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from spark_prompt_builder import SparkPromptBuilder
-from turn_manager import TurnManager
-from tools.workspace_tools import dispatch_tool
+from skills_registry import SparkPromptBuilder
+from event_queue import TurnManager
+from workspace_tools import dispatch_tool
 
 
 class AgentDispatcher:

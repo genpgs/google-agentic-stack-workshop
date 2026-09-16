@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-03/tests/test_pipeline_engine.py
+track-sprint/module-03/tests/test_module03.py
 
-Pytest test harness for Sprint Module 03: Multi-Agent Pipeline & Artifact Engine.
+Pytest test harness for Sprint Module 03: Antigravity 2.0 Multi-Agent Code Review & PR Bot.
 All tests run strictly offline — no live API calls.
 """
 import hashlib
@@ -15,13 +15,13 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MOCK_BIN = REPO_ROOT / "mock-bin"
-SRC_DIR = Path(__file__).resolve().parents[1] / "src"
-sys.path.insert(0, str(SRC_DIR))
+WORKSPACE_DIR = Path(__file__).resolve().parents[1] / "workspace"
+sys.path.insert(0, str(WORKSPACE_DIR))
 
-from pipeline_engine import PipelineEngine
-from subagent_coordinator import SubagentCoordinator, AgentMessage
+from pr_reviewer import PipelineEngine
+from rules_engine import SubagentCoordinator, AgentMessage
 from artifact_critic import critique_artifact, run_headless_critique
-from diff_patcher import apply_patch, parse_unified_diff
+from patch_generator import apply_patch, parse_unified_diff
 
 
 @pytest.fixture(autouse=True)

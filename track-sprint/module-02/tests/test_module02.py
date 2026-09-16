@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-02/tests/test_agent_dispatcher.py
+track-sprint/module-02/tests/test_module02.py
 
-Pytest test harness for Sprint Module 02: Gemini Spark Autonomous Agent & Tool Dispatcher.
+Pytest test harness for Sprint Module 02: Gemini Spark 24/7 Workspace Assistant Simulator.
 All tests run strictly offline — no live API calls.
 """
 import json
@@ -16,14 +16,14 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MOCK_BIN = REPO_ROOT / "mock-bin"
-SRC_DIR = Path(__file__).resolve().parents[1] / "src"
-sys.path.insert(0, str(SRC_DIR))
-sys.path.insert(0, str(SRC_DIR / "tools"))
+WORKSPACE_DIR = Path(__file__).resolve().parents[1] / "workspace"
+sys.path.insert(0, str(WORKSPACE_DIR))
+sys.path.insert(0, str(WORKSPACE_DIR / "tools"))
 
-from agent_dispatcher import AgentDispatcher
-from spark_prompt_builder import SparkPromptBuilder
-from turn_manager import TurnManager
-from tools.workspace_tools import dispatch_tool, list_workspace_files, read_workspace_file
+from daemon import AgentDispatcher
+from skills_registry import SparkPromptBuilder
+from event_queue import TurnManager
+from workspace_tools import dispatch_tool, list_workspace_files, read_workspace_file
 
 
 @pytest.fixture(autouse=True)

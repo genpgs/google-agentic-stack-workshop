@@ -16,9 +16,9 @@ MOCK_BIN = REPO_ROOT / "mock-bin"
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from subagent_coordinator import SubagentCoordinator, AgentMessage
+from rules_engine import SubagentCoordinator, AgentMessage
 from artifact_critic import critique_artifact
-from diff_patcher import apply_patch
+from patch_generator import apply_patch
 
 
 class PipelineEngine:

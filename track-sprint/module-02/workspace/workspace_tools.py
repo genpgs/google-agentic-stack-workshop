@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def list_workspace_files(directory: str = ".", extensions: list[str] | None = None) -> dict:

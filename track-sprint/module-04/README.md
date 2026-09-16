@@ -1,13 +1,13 @@
-# Module 04: Enterprise Autograder & Offline CI/CD Verification Suite
+# Module 04 — End-to-End Autonomous Software Factory
 
 ## Capstone Goal
 Construct an end-to-end autograding system capable of testing and validating all 30 atomic daily challenges and 3 preceding sprint capstones in an offline, air-gapped CI container.
 
 ## File Structure
-- `src/autograder_core.py`: Core orchestrator.
-- `src/bats_runner.py`: Bats test runner for atomic days.
-- `src/grade_reporter.py`: Generates the JSON grade report.
-- `src/sandbox_guard.py`: Isolates test execution in a sandbox.
+- `workspace/autograder_core.py`: Core orchestrator.
+- `workspace/bats_runner.py`: Bats test runner for atomic days.
+- `workspace/grade_reporter.py`: Generates the JSON grade report.
+- `workspace/sandbox_guard.py`: Isolates test execution in a sandbox.
 - `tests/test_autograder_core.py`: Pytest test suite for validating all criteria.
 
 ## How to Run

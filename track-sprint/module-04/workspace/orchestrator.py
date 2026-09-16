@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-04/src/autograder_core.py
+track-sprint/module-04/workspace/orchestrator.py
 
 Core autograder orchestrator for all 30 atomic days and 3 sprint modules.
 Runs entirely offline in an air-gapped CI container.
@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 MOCK_BIN = REPO_ROOT / "mock-bin"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from bats_runner import run_all_atomic_tests
+from spark_bridge import run_all_atomic_tests
 from grade_reporter import GradeReporter
 from sandbox_guard import SandboxGuard
 

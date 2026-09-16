@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-04/src/bats_runner.py
+track-sprint/module-04/workspace/spark_bridge.py
 
 Bats test suite runner for all track-atomic daily challenges.
 Runs each day's test.bats in isolation and aggregates results.

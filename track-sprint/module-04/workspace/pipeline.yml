@@ -1,0 +1,62 @@
+# track-sprint/module-04/workspace/pipeline.yml
+# Sprint Module 04 — End-to-End Autonomous Software Factory
+# GitHub Actions pipeline: Gemini Spark trigger → AGY CLI implementation → AGY IDE verification
+#
+# This pipeline orchestrates a full multi-agent software development cycle
+# in a headless container environment.
+
+name: Autonomous Software Factory
+
+on:
+  workflow_dispatch:
+    inputs:
+      feature_spec:
+        description: "Natural-language feature specification"
+        required: true
+        type: string
+
+env:
+  AGY_OFFLINE_MODE: "0"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  decompose:
+    name: Spark — Requirements Decomposition
+    runs-on: ubuntu-latest
+    outputs:
+      tasks_json: ${{ steps.spark.outputs.tasks_json }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Spark bridge decomposition
+        id: spark
+        run: |
+          python3 track-sprint/module-04/workspace/spark_bridge.py \
+            --spec "${{ inputs.feature_spec }}" \
+            --output tasks.json
+          echo "tasks_json=$(cat tasks.json)" >> "$GITHUB_OUTPUT"
+
+  implement:
+    name: AGY CLI — Headless Code Implementation
+    runs-on: ubuntu-latest
+    needs: decompose
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run orchestrator
+        run: |
+          python3 track-sprint/module-04/workspace/orchestrator.py \
+            --tasks '${{ needs.decompose.outputs.tasks_json }}'
+
+  verify:
+    name: AGY IDE — Session Export & Verification
+    runs-on: ubuntu-latest
+    needs: implement
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run autograder and generate report
+        run: |
+          python3 track-sprint/module-04/workspace/orchestrator.py --report
+      - name: Upload grade report
+        uses: actions/upload-artifact@v4
+        with:
+          name: grade-report
+          path: grade_report.json

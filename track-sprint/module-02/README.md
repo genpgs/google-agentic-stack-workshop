@@ -1,4 +1,4 @@
-# Module 02 — Gemini Spark Autonomous Agent & Tool Dispatcher
+# Module 02 — Gemini Spark 24/7 Workspace Assistant Simulator
 
 > **Track:** Sprint | **Module:** 02 | **Difficulty:** Intermediate–Advanced
 
@@ -20,7 +20,7 @@ By the end of this module you will have built:
 ```
 track-sprint/module-02/
 ├── README.md                          ← this file
-├── src/
+├── workspace/
 │   ├── spark_prompt_builder.py        ← Spark payload builder & validator
 │   ├── turn_manager.py                ← Stateful multi-turn history manager
 │   ├── agent_dispatcher.py            ← Autonomous dispatcher orchestrator

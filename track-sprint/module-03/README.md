@@ -1,4 +1,4 @@
-# Module 03 — Antigravity 2.0 Multi-Agent Pipeline & Artifact Engine
+# Module 03 — Antigravity 2.0 Multi-Agent Code Review & PR Bot
 
 ## Capstone Goal
 
@@ -13,7 +13,7 @@ code artifacts — entirely **headlessly** and **offline**.
 ```
 track-sprint/module-03/
 ├── README.md                        ← This file
-├── src/
+├── workspace/
 │   ├── diff_patcher.py              ← Safe unified diff applier
 │   ├── artifact_critic.py           ← Headless artifact quality evaluator
 │   ├── subagent_coordinator.py      ← JSON-envelope inter-agent router

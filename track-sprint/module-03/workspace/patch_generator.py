@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-track-sprint/module-03/src/diff_patcher.py
+track-sprint/module-03/workspace/patch_generator.py
 
 Safe unified diff applier for workspace code artifacts.
 Rejects malformed patches to prevent workspace corruption.
