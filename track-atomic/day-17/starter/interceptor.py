@@ -10,9 +10,10 @@ MOCK_ROUTES = {
 }
 
 def intercept(command):
-    # BUG: does not strip trailing whitespace from command before matching
+    # BUG: does not strip trailing whitespace; uses re.fullmatch so trailing
+    # whitespace causes a mismatch against patterns that don't include \s*$
     for pattern, response in MOCK_ROUTES.items():
-        if re.match(pattern, command):
+        if re.fullmatch(pattern, command):
             return json.dumps(response)
     return None
 

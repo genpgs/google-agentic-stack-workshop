@@ -27,9 +27,14 @@ for DAY_DIR in "${REPO_ROOT}"/track-atomic/day-*/; do
 done
 
 TOTAL=$((PASSED + FAILED))
+if [[ ${#FAILED_DAYS[@]} -eq 0 ]]; then
+  FAILED_DAYS_JSON="[]"
+else
+  FAILED_DAYS_JSON="$(printf '%s\n' "${FAILED_DAYS[@]}" | jq -R . | jq -s . 2>/dev/null || echo '[]')"
+fi
 SUMMARY=$(printf '{"total": %d, "passed": %d, "failed": %d, "failed_days": %s, "status": "%s"}' \
   "$TOTAL" "$PASSED" "$FAILED" \
-  "$(printf '%s\n' "${FAILED_DAYS[@]:-}" | jq -R . | jq -s . 2>/dev/null || echo '[]')" \
+  "$FAILED_DAYS_JSON" \
   "$([ "$FAILED" -eq 0 ] && echo COMPLETED || echo FAILED)")
 
 echo "$SUMMARY"

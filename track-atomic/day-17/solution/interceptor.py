@@ -12,7 +12,7 @@ MOCK_ROUTES = {
 def intercept(command):
     command = command.strip()  # FIX: strip whitespace before matching
     for pattern, response in MOCK_ROUTES.items():
-        if re.match(pattern, command):
+        if re.fullmatch(pattern, command):
             return json.dumps(response)
     return None
 
