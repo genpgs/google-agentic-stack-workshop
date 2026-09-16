@@ -12,3 +12,24 @@ ENV/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Agentic framework files
+.agents/
+.agy/
+
+# Secrets
+.env
+
+# OS / Editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/

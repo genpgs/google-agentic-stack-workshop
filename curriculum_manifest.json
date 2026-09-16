@@ -1,424 +1,296 @@
 {
-"curriculum_manifest_name": "curriculum_manifest.json",
-"specification": {
-"monorepo_scope": [
-"Gemini Spark",
-"Antigravity 2.0",
-"Antigravity CLI"
-],
-"environment": {
-"container": ".devcontainer (Python 3.11, bats-core, jq, pytest)",
-"mock_binary": "mock-bin/agy (offline, non-interactive CI mock)",
-"autograder_rules": [
-"Tests must verify non-interactive headless flags (--headless, --json).",
-"No network dependencies or live API quota usage during test runs."
-]
-}
-},
-"atomic_track": [
-{
-"day_number": 1,
-"title": "Antigravity CLI Binary Path & Version Probe",
-"skill_focus": "Bash",
-"starter_bug_description": "Starter script fails to locate mock-bin/agy because PATH is unset, and invokes interactive mode instead of --headless.",
-"test_assertion_criteria": [
-"Verifies agy binary resolves to mock-bin/agy without network lookup",
-"Asserts execution includes --headless and --json flags",
-"Checks exit status is 0 and output parses valid JSON via jq"
-]
-},
-{
-"day_number": 2,
-"title": "Headless Output Deserialization with jq",
-"skill_focus": "Bash",
-"starter_bug_description": "Starter pipeline parses raw stdout without handling multiline JSON streaming from agy run --headless.",
-"test_assertion_criteria": [
-"Ensures pipeline feeds agy output to jq with --exit-status",
-"Asserts key metadata.status equals COMPLETED",
-"Fails if any unescaped ANSI codes pollute JSON output"
-]
-},
-{
-"day_number": 3,
-"title": "Offline Environment Guard & API Key Stubbing",
-"skill_focus": "Bash",
-"starter_bug_description": "Starter script attempts to check live remote endpoint if GEMINI_API_KEY is not defined instead of enforcing AGY_OFFLINE_MODE=1.",
-"test_assertion_criteria": [
-"Verifies execution fails fast when network access is attempted",
-"Asserts AGY_OFFLINE_MODE=1 environment variable is passed to mock-bin/agy",
-"Checks that no outbound socket calls are made"
-]
-},
-{
-"day_number": 4,
-"title": "Antigravity CLI Config Initialization",
-"skill_focus": "Python",
-"starter_bug_description": "Configuration loader parses agy.config.json using relative paths that break when invoked outside the root directory.",
-"test_assertion_criteria": [
-"Asserts config loader locates .devcontainer and root configs dynamically",
-"Verifies headless default boolean is set to True",
-"Validates configuration schema against mock-bin/agy requirements"
-]
-},
-{
-"day_number": 5,
-"title": "Non-Interactive Session Spawning",
-"skill_focus": "Bash",
-"starter_bug_description": "Starter bats test hangs indefinitely because agy session start omits --headless and awaits stdin.",
-"test_assertion_criteria": [
-"Verifies --headless flag is passed to agy session start",
-"Confirms mock session token is captured from stdout JSON",
-"Validates exit code 0 within timeout limit"
-]
-},
-{
-"day_number": 6,
-"title": "Mock Binary Fixture Injection",
-"skill_focus": "Python",
-"starter_bug_description": "Python subprocess wrapper calls global agy executable instead of injected mock-bin/agy fixture in isolated tests.",
-"test_assertion_criteria": [
-"Verifies PATH manipulation prepends mock-bin directory",
-"Asserts subprocess command array contains --json flag",
-"Asserts mock response payload conforms to expected schema"
-]
-},
-{
-"day_number": 7,
-"title": "BATS Test Suite Assertion for CLI Exit Codes",
-"skill_focus": "Bash",
-"starter_bug_description": "test.bats checks stdout regex instead of explicit exit code semantics for missing command arguments.",
-"test_assertion_criteria": [
-"Verifies bats test asserts status equals 2 on invalid arguments",
-"Asserts error JSON payload contains code INVALID_ARGUMENT",
-"Ensures stderr contains structured error output"
-]
-},
-{
-"day_number": 8,
-"title": "Gemini Spark Prompt Assembly & Escaping",
-"skill_focus": "Python",
-"starter_bug_description": "Prompt template builder fails to escape double quotes and multiline variables when constructing JSON CLI payloads.",
-"test_assertion_criteria": [
-"Validates generated JSON payload passes json.loads() without syntax error",
-"Asserts prompt string contains required Spark role tags",
-"Ensures --payload parameter is passed correctly to agy run"
-]
-},
-{
-"day_number": 9,
-"title": "Headless Agent Dispatcher Script",
-"skill_focus": "Bash",
-"starter_bug_description": "Dispatcher script uses interactive read prompts to select task category rather than parsing CLI arguments.",
-"test_assertion_criteria": [
-"Asserts script processes --task and --category flags non-interactively",
-"Verifies invocation of agy agent dispatch --headless",
-"Checks JSON result envelope contains task_id and status"
-]
-},
-{
-"day_number": 10,
-"title": "Subprocess Error Capture & Logging",
-"skill_focus": "Python",
-"starter_bug_description": "Subprocess caller swallows stderr on non-zero exit codes, obscuring mock-bin diagnostic messages.",
-"test_assertion_criteria": [
-"Verifies subprocess.CalledProcessError captures stderr output",
-"Asserts error logger emits structured JSON log entry",
-"Verifies mock-bin/agy failure modes are propagated faithfully"
-]
-},
-{
-"day_number": 11,
-"title": "Deterministic Response Fixture Parser",
-"skill_focus": "Python",
-"starter_bug_description": "Response parser assumes single-chunk output and crashes on chunked JSON lines from agy stream --headless.",
-"test_assertion_criteria": [
-"Asserts streaming JSON parser handles newline-delimited JSON chunks",
-"Verifies accumulator reconstructs full Gemini Spark response",
-"Validates zero live API requests are made during parsing"
-]
-},
-{
-"day_number": 12,
-"title": "JSON Schema Validation for Spark Artifacts",
-"skill_focus": "Python",
-"starter_bug_description": "Validator script does not validate generated artifact metadata against monorepo schema before saving.",
-"test_assertion_criteria": [
-"Asserts jsonschema.validate confirms required schema fields",
-"Checks validation failure raises descriptive ValidationError without network fetch",
-"Verifies compliance with track-atomic output contracts"
-]
-},
-{
-"day_number": 13,
-"title": "Batch Job Dispatcher with Bats Runner",
-"skill_focus": "Bash",
-"starter_bug_description": "Batch runner does not stop on first failure and loses individual exit codes in loop iteration.",
-"test_assertion_criteria": [
-"Verifies test.bats checks each batch iteration independently",
-"Asserts agy batch --headless --json execution",
-"Confirms batch summary report is generated in valid JSON format"
-]
-},
-{
-"day_number": 14,
-"title": "Environment Isolation & Temporary Sandbox",
-"skill_focus": "Bash",
-"starter_bug_description": "Starter script pollutes monorepo root by creating temporary session files directly in current working directory.",
-"test_assertion_criteria": [
-"Asserts creation and cleanup of mktemp isolated directory",
-"Verifies agy --workdir points strictly to temporary sandbox",
-"Checks workspace cleanup on EXIT trap"
-]
-},
-{
-"day_number": 15,
-"title": "Gemini Spark Tool Call Serialization",
-"skill_focus": "Python",
-"starter_bug_description": "Tool call serializer outputs snake_case keys instead of camelCase expected by Antigravity 2.0 runtime schema.",
-"test_assertion_criteria": [
-"Asserts serialized function call parameters adhere to camelCase spec",
-"Checks mock-bin/agy accepts serialized tool payload without schema rejection",
-"Verifies json round-trip invariance"
-]
-},
-{
-"day_number": 16,
-"title": "Headless Status Polling Loop",
-"skill_focus": "Bash",
-"starter_bug_description": "Polling loop runs an unbounded while loop without sleep or timeout limit, causing CI test runner timeout.",
-"test_assertion_criteria": [
-"Verifies loop implements fixed maximum retry count and interval",
-"Asserts agy status --headless --json is polled non-interactively",
-"Confirms loop exits with status 0 upon COMPLETED"
-]
-},
-{
-"day_number": 17,
-"title": "Mock CLI Response Interceptor",
-"skill_focus": "Python",
-"starter_bug_description": "Interceptor fails to match mock command regex patterns due to unstripped trailing whitespace.",
-"test_assertion_criteria": [
-"Asserts regex matcher accurately matches agy CLI subcommands",
-"Verifies interceptor returns designated mock-bin fixture without network",
-"Checks returned exit code mirrors mocked response definition"
-]
-},
-{
-"day_number": 18,
-"title": "Antigravity Workspace Manifest Generation",
-"skill_focus": "Python",
-"starter_bug_description": "Manifest generator produces invalid JSON due to unhandled datetime objects and missing serializable encoder.",
-"test_assertion_criteria": [
-"Asserts manifest generation produces strictly valid JSON",
-"Verifies metadata contains monorepo version and timestamp",
-"Checks manifest load test passes with json.loads"
-]
-},
-{
-"day_number": 19,
-"title": "BATS Mock Verification for Network Egress Block",
-"skill_focus": "Bash",
-"starter_bug_description": "test.bats does not assert offline isolation or mock environment block, allowing potential test leakage.",
-"test_assertion_criteria": [
-"Asserts test environment executes under mocked network boundary",
-"Verifies any attempted network connection produces mocked error code",
-"Checks bats assertion fails if non-mock binary is referenced"
-]
-},
-{
-"day_number": 20,
-"title": "Antigravity CLI Argument Sanitizer",
-"skill_focus": "Python",
-"starter_bug_description": "Sanitizer fails to quote user input containing shell metacharacters prior to passing to subprocess.Popen.",
-"test_assertion_criteria": [
-"Verifies shell injection characters are safely escaped or parameterized",
-"Asserts arguments are passed as list rather than shell=True string",
-"Ensures agy invocation executes safely under test assertions"
-]
-},
-{
-"day_number": 21,
-"title": "Gemini Spark Multi-Turn Conversation State Reducer",
-"skill_focus": "Python",
-"starter_bug_description": "State reducer drops role history when appending tool result messages to the conversation buffer.",
-"test_assertion_criteria": [
-"Asserts conversation turns maintain alternating user/model roles",
-"Verifies tool response messages are formatted correctly for Spark",
-"Asserts serialization to --headless session payload succeeds"
-]
-},
-{
-"day_number": 22,
-"title": "Headless Failure Telemetry Formatter",
-"skill_focus": "Bash",
-"starter_bug_description": "Telemetry script sends logs to stdout as raw text, breaking downstream jq consumers in CI.",
-"test_assertion_criteria": [
-"Asserts error telemetry is emitted strictly as newline-delimited JSON",
-"Verifies jq .severity and .message can parse every log line",
-"Checks bats test fails if plain text lines are detected"
-]
-},
-{
-"day_number": 23,
-"title": "Mock CLI Fixture Override Mechanism",
-"skill_focus": "Bash",
-"starter_bug_description": "Starter script hardcodes fixture path instead of respecting AGY_FIXTURE_PATH environment override.",
-"test_assertion_criteria": [
-"Asserts AGY_FIXTURE_PATH override takes precedence over defaults",
-"Verifies mock-bin/agy serves designated JSON fixture",
-"Checks test.bats verifies dynamic fixture switching"
-]
-},
-{
-"day_number": 24,
-"title": "Antigravity 2.0 Task Manifest Validator",
-"skill_focus": "Python",
-"starter_bug_description": "Task manifest validator permits missing autograder block in day specifications.",
-"test_assertion_criteria": [
-"Asserts validator checks presence of starter, solution, and test.bats",
-"Verifies validation errors report missing keys clearly",
-"Confirms test asserts pass on valid atomic track folder structures"
-]
-},
-{
-"day_number": 25,
-"title": "BATS Execution Timeout & Deadlock Guard",
-"skill_focus": "Bash",
-"starter_bug_description": "BATS test runner lacks command timeout wrapper, causing tests to hang indefinitely if agy deadlocks.",
-"test_assertion_criteria": [
-"Asserts test.bats invokes commands via timeout 10s wrapper",
-"Verifies return code 124 triggers actionable timeout failure message",
-"Checks test suite finishes within offline test runner quota"
-]
-},
-{
-"day_number": 26,
-"title": "Python Subprocess Signal Handling & Graceful Termination",
-"skill_focus": "Python",
-"starter_bug_description": "CLI wrapper leaves orphaned mock-bin processes running in background upon SIGTERM.",
-"test_assertion_criteria": [
-"Verifies signal handlers catch SIGINT and SIGTERM cleanly",
-"Asserts child process terminate and kill routines execute",
-"Checks test verifies no dangling agy PID in process table"
-]
-},
-{
-"day_number": 27,
-"title": "Spark Capability Manifest Generator",
-"skill_focus": "Python",
-"starter_bug_description": "Script generates malformed tool declarations missing parameter type specifications required by Gemini Spark.",
-"test_assertion_criteria": [
-"Asserts tool declaration parameters contain required type and description fields",
-"Verifies JSON schema compliance with Antigravity 2.0 tool interface",
-"Asserts offline validation against mock-bin/agy"
-]
-},
-{
-"day_number": 28,
-"title": "Structured Diff Assessor for Starter vs Solution",
-"skill_focus": "Bash",
-"starter_bug_description": "Diff checker returns 0 even when starter and solution files are completely identical.",
-"test_assertion_criteria": [
-"Asserts script returns non-zero exit code if starter equals solution",
-"Verifies unified diff summary is formatted as JSON",
-"Checks test.bats fails on zero-diff challenge folders"
-]
-},
-{
-"day_number": 29,
-"title": "Offline Dependency Integrity Verifier",
-"skill_focus": "Python",
-"starter_bug_description": "Integrity checker queries remote repository rather than checking local wheels/cache in .devcontainer.",
-"test_assertion_criteria": [
-"Verifies check operates strictly against local environment packages",
-"Asserts verification succeeds without internet connectivity",
-"Checks error is raised if bats-core or jq is missing from PATH"
-]
-},
-{
-"day_number": 30,
-"title": "Full Atomic Track CI Pre-Flight Runner",
-"skill_focus": "Bash",
-"starter_bug_description": "Pre-flight script fails to aggregate BATS test results across all 30 days and exits prematurely on first non-fatal warning.",
-"test_assertion_criteria": [
-"Asserts runner executes test.bats across all track-atomic subdirectories",
-"Verifies final summary report conforms to non-interactive JSON schema",
-"Asserts exit code 0 only when all 30 daily suites pass"
-]
-}
-],
-"sprint_track": [
-{
-"module_number": 1,
-"title": "Headless CLI Foundation & Mock Runtime Harness",
-"capstone_goal": "Build a resilient, headless execution harness wrapping Antigravity CLI (mock-bin/agy) with deterministic JSON output, error interceptors, and complete offline test coverage.",
-"multi_file_components": [
-"track-sprint/module-1/src/cli_harness.py",
-"track-sprint/module-1/src/mock_executor.py",
-"track-sprint/module-1/src/schema_validator.py",
-"track-sprint/module-1/config/agy_headless.json",
-"track-sprint/module-1/tests/test_harness.py"
-],
-"pytest_criteria": [
-"test_cli_headless_invocation: Verifies agy is invoked with --headless and --json flags and returns exit code 0",
-"test_offline_boundary_enforcement: Verifies socket.socket connections are intercepted and blocked during execution",
-"test_mock_binary_fallback: Validates mock-bin/agy fixture substitution under AGY_OFFLINE_MODE=1",
-"test_json_schema_validation: Asserts harness stdout adheres to Antigravity CLI 2.0 output schema"
-]
-},
-{
-"module_number": 2,
-"title": "Gemini Spark Autonomous Agent & Tool Dispatcher",
-"capstone_goal": "Implement a multi-step autonomous agent dispatcher using Gemini Spark prompts, stateful multi-turn history tracking, and headless function calling over local workspace files.",
-"multi_file_components": [
-"track-sprint/module-2/src/agent_dispatcher.py",
-"track-sprint/module-2/src/spark_prompt_builder.py",
-"track-sprint/module-2/src/turn_manager.py",
-"track-sprint/module-2/src/tools/workspace_tools.py",
-"track-sprint/module-2/tests/test_agent_dispatcher.py"
-],
-"pytest_criteria": [
-"test_agent_dispatch_headless: Verifies agent orchestrates tasks without prompt pauses using --headless",
-"test_tool_call_routing: Confirms function calls are routed to local workspace tools without external API requests",
-"test_multi_turn_state_preservation: Asserts history buffer maintains context integrity across iterative tool invocations",
-"test_agent_timeout_and_recovery: Validates agent recovers gracefully from mock CLI execution timeouts"
-]
-},
-{
-"module_number": 3,
-"title": "Antigravity 2.0 Multi-Agent Pipeline & Artifact Engine",
-"capstone_goal": "Develop an agentic pipeline engine that coordinates multiple specialized Spark subagents to generate, critique, and validate structured repository code artifacts headlessly.",
-"multi_file_components": [
-"track-sprint/module-3/src/pipeline_engine.py",
-"track-sprint/module-3/src/subagent_coordinator.py",
-"track-sprint/module-3/src/artifact_critic.py",
-"track-sprint/module-3/src/diff_patcher.py",
-"track-sprint/module-3/tests/test_pipeline_engine.py"
-],
-"pytest_criteria": [
-"test_pipeline_multi_agent_flow: Asserts generator and critic subagents communicate through structured JSON envelopes",
-"test_artifact_deterministic_output: Confirms generated code artifacts match expected golden hashes under mock seeds",
-"test_headless_critic_evaluation: Verifies critic evaluation runs non-interactively and flags intentional anomalies",
-"test_patch_application_safety: Validates diff_patcher rejects malformed patches without corrupting workspace files"
-]
-},
-{
-"module_number": 4,
-"title": "Enterprise Autograder & Offline CI/CD Verification Suite",
-"capstone_goal": "Construct an end-to-end autograding system capable of testing and validating all 30 atomic daily challenges and 3 preceding sprint capstones in an offline, air-gapped CI container.",
-"multi_file_components": [
-"track-sprint/module-4/src/autograder_core.py",
-"track-sprint/module-4/src/bats_runner.py",
-"track-sprint/module-4/src/grade_reporter.py",
-"track-sprint/module-4/src/sandbox_guard.py",
-"track-sprint/module-4/tests/test_autograder_core.py"
-],
-"pytest_criteria": [
-"test_autograder_batch_evaluation: Verifies autograder runs all 30 atomic test.bats and parses structured results",
-"test_zero_network_leakage: Confirms pytest suite executes strictly offline with all egress blocked",
-"test_non_interactive_report_generation: Validates grade_reporter outputs valid machine-readable JSON without manual interaction",
-"test_sandbox_containment: Asserts tested code execution cannot modify parent directories outside designated sandbox"
-]
-}
-]
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "project": "google-agentic-stack-workshop",
+    "version": "1.0.0",
+    "description": "30-Day Atomic Habit micro-lessons and 4 workshop capstone sprints for Gemini Spark, Antigravity 2.0, and Antigravity CLI with offline mock-driven test harnesses.",
+    "tracks": {
+        "atomic_track": [
+            {
+                "day": 1,
+                "title": "Headless CLI Session & Keyring Auth",
+                "tech": "Bash",
+                "concept": "Invoking Antigravity CLI in non-interactive headless mode and authenticating via mock token flags.",
+                "starter_bug": "connect.sh omits the mandatory --headless flag, causing the command to hang waiting for an interactive TUI response.",
+                "assertion": "test_day01.bats asserts execution terminates with exit code 0 within 5 seconds and stdout contains 'status: authenticated'."
+            },
+            {
+                "day": 2,
+                "title": "Config Inspection & Safe Workspace Sandboxing",
+                "tech": "Bash",
+                "concept": "Validating local .antigravity/policy.yaml configuration and workspace directory boundary enforcement.",
+                "starter_bug": "audit_policy.sh points to an unquoted path and fails to detect missing 'allow-fs-write' permissions.",
+                "assertion": "test_day02.bats asserts policy validation script flags insecure workspace paths with exit code 1."
+            },
+            {
+                "day": 3,
+                "title": "Headless Codebase Context Ingestion",
+                "tech": "Bash",
+                "concept": "Executing 'agy context index' headlessly to ingest source files into local agent cache.",
+                "starter_bug": "index_repo.sh does not check if mock-bin/agy returned valid JSON, causing jq to fail on empty input.",
+                "assertion": "test_day03.bats asserts jq cleanly extracts 'indexed_files_count' and returns 0 exit code."
+            },
+            {
+                "day": 4,
+                "title": "Agent Prompt Construction & Output Redirection",
+                "tech": "Bash",
+                "concept": "Piping structured system instructions into agy run and capturing JSON artifacts without terminal ANSI escapes.",
+                "starter_bug": "run_prompt.sh fails to pass '--no-color', leaving raw ANSI escape sequences inside the target JSON file.",
+                "assertion": "test_day04.bats asserts the generated output file parses as valid JSON via jq."
+            },
+            {
+                "day": 5,
+                "title": "Python SDK Client Initialization",
+                "tech": "Python",
+                "concept": "Instantiating the Antigravity offline client fixture and handling missing environment variables cleanly.",
+                "starter_bug": "client.py throws an uncaught KeyError when AGY_MOCK_ENDPOINT is unset instead of falling back to default.",
+                "assertion": "pytest test_day05.py asserts AntigravityClient() instantiates with default localhost mock endpoint."
+            },
+            {
+                "day": 6,
+                "title": "Tool Schema Definition for Python Agents",
+                "tech": "Python",
+                "concept": "Writing JSON-schema function call definitions compatible with the Antigravity core agent harness.",
+                "starter_bug": "tools.py omits the required 'description' and 'parameters' top-level keys in the tool declaration dict.",
+                "assertion": "pytest test_day06.py validates tool dictionary matches standard OpenAPI / Gemini tool schema specs."
+            },
+            {
+                "day": 7,
+                "title": "Headless Tool Execution & Return Piping",
+                "tech": "Python",
+                "concept": "Executing local shell tools and returning JSON output dictionaries back into agent context.",
+                "starter_bug": "executor.py catches stdout but ignores stderr when a tool process returns a non-zero exit status.",
+                "assertion": "pytest test_day07.py verifies failed tool execution raises ToolExecutionError with captured stderr."
+            },
+            {
+                "day": 8,
+                "title": "Bash Diff Verification Before Committing",
+                "tech": "Bash",
+                "concept": "Inspecting unified git diffs generated by an autonomous agent before staging changes.",
+                "starter_bug": "verify_diff.sh uses 'grep' incorrectly, failing to catch forbidden file deletions ('delete mode 100644').",
+                "assertion": "test_day08.bats tests that verify_diff.sh exits with code 1 if a diff contains file deletions."
+            },
+            {
+                "day": 9,
+                "title": "Parsing Gemini Spark Schedule Triggers",
+                "tech": "Python",
+                "concept": "Configuring recurring cloud background triggers and parsing cron schedule syntax.",
+                "starter_bug": "scheduler.py misinterprets standard 5-field cron strings, crashing on '@hourly' presets.",
+                "assertion": "pytest test_day09.py tests parsing both 5-part cron strings and convenience alias macros."
+            },
+            {
+                "day": 10,
+                "title": "Designing Teachable Skills for Spark",
+                "tech": "Python",
+                "concept": "Defining persistent behavioral skills in JSON format for the Gemini Spark agent engine.",
+                "starter_bug": "skill_manifest.py produces invalid parameter typings, confusing 'string' with Python 'str' in JSON schema.",
+                "assertion": "pytest test_day10.py validates exported skill JSON against the Spark Teachable Skill schema."
+            },
+            {
+                "day": 11,
+                "title": "Headless CLI Session Exporting",
+                "tech": "Bash",
+                "concept": "Exporting terminal conversation history to an Antigravity 2.0 workspace archive using 'agy export'.",
+                "starter_bug": "export_session.sh hardcodes the output path to /tmp without checking write permissions.",
+                "assertion": "test_day11.bats verifies exported .agy-session file is created in the user-specified target path."
+            },
+            {
+                "day": 12,
+                "title": "Multi-File Patch Application via Script",
+                "tech": "Bash",
+                "concept": "Applying agent-generated unidiff patches cleanly across a staging directory.",
+                "starter_bug": "apply_patch.sh runs 'patch -p0' instead of 'patch -p1', causing path lookup failures.",
+                "assertion": "test_day12.bats confirms git working tree is cleanly patched without rejecting hunks."
+            },
+            {
+                "day": 13,
+                "title": "Agent Guardrails: Token Budgets & Step Caps",
+                "tech": "Python",
+                "concept": "Implementing iteration bounds on autonomous agent execution loops to avoid runaway API costs.",
+                "starter_bug": "loop.py uses while True without decrementing the max_steps counter variable.",
+                "assertion": "pytest test_day13.py asserts agent loop terminates with MaxStepsExceeded when reaching step limit."
+            },
+            {
+                "day": 14,
+                "title": "BATS Test Runner Assertions for CLI Commands",
+                "tech": "Bash",
+                "concept": "Writing robust automated test assertions for custom CLI wrapper scripts.",
+                "starter_bug": "test_wrapper.bats checks '$status' before calling 'run', causing testing against the wrong command.",
+                "assertion": "test_day14.bats passes self-test verifying correct order of execution for BATS assertions."
+            },
+            {
+                "day": 15,
+                "title": "Connecting Workspace MCP Protocols",
+                "tech": "Python",
+                "concept": "Establishing a standard Model Context Protocol (MCP) transport connection to local mock tools.",
+                "starter_bug": "mcp_client.py fails to send the mandatory initialize JSON-RPC handshake before issuing tool calls.",
+                "assertion": "pytest test_day15.py confirms proper JSON-RPC handshake request and response parsing."
+            },
+            {
+                "day": 16,
+                "title": "Automated Linting via Agent CLI",
+                "tech": "Bash",
+                "concept": "Triggering headless agent code repair on flake8/ruff linting failures.",
+                "starter_bug": "auto_lint.sh fails to pass the exit code of ruff to the agent trigger condition.",
+                "assertion": "test_day16.bats confirms the agent is only invoked if linting returns exit code 1."
+            },
+            {
+                "day": 17,
+                "title": "Handling Spark Persistent Memory & State Dumps",
+                "tech": "Python",
+                "concept": "Serializing and restoring agent memory context between distinct execution runs.",
+                "starter_bug": "state_manager.py overwrites existing state files on initialization instead of appending or merging.",
+                "assertion": "pytest test_day17.py verifies previous context keys are preserved across reloads."
+            },
+            {
+                "day": 18,
+                "title": "Headless Error Recovery & Retry Loops",
+                "tech": "Bash",
+                "concept": "Implementing exponential backoff inside shell scripts invoking agent operations.",
+                "starter_bug": "retry.sh uses a fixed delay and does not increment backoff multiplier on HTTP 429.",
+                "assertion": "test_day18.bats validates exponential sleep intervals across 3 simulated failure attempts."
+            },
+            {
+                "day": 19,
+                "title": "Python Test-Driven Development (TDD) Agent Loop",
+                "tech": "Python",
+                "concept": "Writing an autonomous loop that reads pytest outputs and attempts targeted bug fixes.",
+                "starter_bug": "tdd_agent.py does not parse pytest summary lines to extract failed test names.",
+                "assertion": "pytest test_day19.py asserts parser extracts failing node IDs from simulated pytest output."
+            },
+            {
+                "day": 20,
+                "title": "Safe File Deletion Policies in Antigravity",
+                "tech": "Bash",
+                "concept": "Verifying repository safety flags preventing unintended file deletion by LLM agents.",
+                "starter_bug": "delete_guard.sh returns 0 even when 'allow_delete: false' is violated.",
+                "assertion": "test_day20.bats asserts delete_guard returns exit code 1 when detecting deletion of protected files."
+            },
+            {
+                "day": 21,
+                "title": "Spark Web Browsing Skill Simulation",
+                "tech": "Python",
+                "concept": "Simulating headless browser DOM extraction queries for Gemini Spark research tasks.",
+                "starter_bug": "dom_parser.py strips text nodes while removing script tags due to an incorrect regex quantifier.",
+                "assertion": "pytest test_day21.py validates extraction of article body without script/style contamination."
+            },
+            {
+                "day": 22,
+                "title": "Sanitizing Agent Output for Shell Execution",
+                "tech": "Bash",
+                "concept": "Preventing shell injection when running shell commands generated by an LLM agent.",
+                "starter_bug": "sanitize.sh evaluates raw agent string using 'eval $COMMAND' without validation.",
+                "assertion": "test_day22.bats asserts dangerous characters (;, |, `) are caught and rejected."
+            },
+            {
+                "day": 23,
+                "title": "Streaming Output Buffering in Terminal",
+                "tech": "Python",
+                "concept": "Handling chunked NDJSON streaming from the agent backend without tearing lines in the terminal.",
+                "starter_bug": "stream.py prints raw chunks directly without buffering incomplete newline-delimited JSON tokens.",
+                "assertion": "pytest test_day23.py confirms fragmented JSON chunks are properly buffered before rendering."
+            },
+            {
+                "day": 24,
+                "title": "Generating Git Commit Messages via Agent",
+                "tech": "Bash",
+                "concept": "Inspecting staged changes and generating Conventional Commits messages headlessly.",
+                "starter_bug": "commit_gen.sh stages all untracked files instead of only diffing currently staged files.",
+                "assertion": "test_day24.bats verifies only staged changes are evaluated for the commit message."
+            },
+            {
+                "day": 25,
+                "title": "Multi-Agent Conversation State Passing",
+                "tech": "Python",
+                "concept": "Handing off task payloads from an Antigravity CLI planning agent to a Python execution agent.",
+                "starter_bug": "handoff.py drops metadata headers containing original user instructions during payload serialize.",
+                "assertion": "pytest test_day25.py verifies metadata and prompt history are preserved across the boundary."
+            },
+            {
+                "day": 26,
+                "title": "Codespaces Healthcheck Scripting",
+                "tech": "Bash",
+                "concept": "Verifying container prerequisites (Python version, bats, git, mock-bin PATH) upon Codespace boot.",
+                "starter_bug": "healthcheck.sh checks global PATH but forgets to test if mock-bin/agy has executable permissions.",
+                "assertion": "test_day26.bats ensures healthcheck fails if mock-bin/agy is missing '+x' permissions."
+            },
+            {
+                "day": 27,
+                "title": "Spark Email Digest Template Engine",
+                "tech": "Python",
+                "concept": "Generating concise Markdown and HTML digests from simulated email thread JSON fixtures.",
+                "starter_bug": "digest.py crashes when an email thread contains zero messages instead of handling empty lists.",
+                "assertion": "pytest test_day27.py asserts empty threads render 'No unread messages' fallback."
+            },
+            {
+                "day": 28,
+                "title": "Headless Multi-File Refactor Auditing",
+                "tech": "Bash",
+                "concept": "Auditing agent modifications across multiple subfolders to ensure scope containment.",
+                "starter_bug": "audit_scope.sh only inspects the current directory and misses changes in nested subdirectories.",
+                "assertion": "test_day28.bats asserts modified files outside the target directory flag a scope boundary error."
+            },
+            {
+                "day": 29,
+                "title": "Agent Benchmark Metric Reporting",
+                "tech": "Python",
+                "concept": "Calculating success rate, latency, and step efficiency from test run logs.",
+                "starter_bug": "metrics.py divides by total tasks without checking for zero, causing ZeroDivisionError on empty logs.",
+                "assertion": "pytest test_day29.py verifies graceful return of 0.0 metrics on empty or unpopulated logs."
+            },
+            {
+                "day": 30,
+                "title": "Capstone Atomic Challenge: Full CI Self-Check",
+                "tech": "Bash",
+                "concept": "Chaining bats test suites and pytest harnesses into a unified local pre-push validation script.",
+                "starter_bug": "ci_check.sh exits immediately after running bats, ignoring the pytest test suite altogether.",
+                "assertion": "test_day30.bats confirms ci_check.sh executes both test frameworks and aggregates final exit codes."
+            }
+        ],
+        "sprint_track": [
+            {
+                "module": 1,
+                "title": "Headless CLI Orchestration & Automated Code Doctor",
+                "capstone_goal": "Build a command-line utility in Bash and Python that runs test suites headlessly via mock agy, captures test errors, and invokes the agent to repair broken code until all tests pass.",
+                "components": [
+                    "workspace/doctor.sh",
+                    "workspace/fix_agent.py",
+                    "workspace/mock_repo/"
+                ],
+                "pytest_criteria": "tests/test_module01.py runs doctor.sh against a broken fixture project, mocks the agy fix cycle, and verifies all tests pass within 3 iterations."
+            },
+            {
+                "module": 2,
+                "title": "Gemini Spark 24/7 Workspace Assistant Simulator",
+                "capstone_goal": "Implement an always-on background worker in Python that consumes scheduled triggers, evaluates incoming simulated Gmail/Calendar events, and executes persistent skills via tool calls.",
+                "components": [
+                    "workspace/daemon.py",
+                    "workspace/skills_registry.py",
+                    "workspace/event_queue.py"
+                ],
+                "pytest_criteria": "tests/test_module02.py asserts daemon processes mock queue events, triggers appropriate skills, and logs execution records without memory leaks."
+            },
+            {
+                "module": 3,
+                "title": "Antigravity 2.0 Multi-Agent Code Review & PR Bot",
+                "capstone_goal": "Create a multi-agent review pipeline that evaluates git diffs, checks compliance against a security checklist, generates suggested git patches, and posts formatted markdown feedback.",
+                "components": [
+                    "workspace/pr_reviewer.py",
+                    "workspace/rules_engine.py",
+                    "workspace/patch_generator.py"
+                ],
+                "pytest_criteria": "tests/test_module03.py asserts reviewer flags security policy violations and produces syntactically valid unified diff patches."
+            },
+            {
+                "module": 4,
+                "title": "End-to-End Autonomous Software Factory",
+                "capstone_goal": "Build a complete multi-agent workflow integrating Gemini Spark (trigger & requirements decomposition), Antigravity CLI (headless code implementation), and Antigravity IDE (session export & verification) into a unified GitHub Actions pipeline.",
+                "components": [
+                    "workspace/orchestrator.py",
+                    "workspace/spark_bridge.py",
+                    "workspace/pipeline.yml"
+                ],
+                "pytest_criteria": "tests/test_module04.py validates the full pipeline execution from raw feature spec to committed, passing code in a headless container environment."
+            }
+        ]
+    }
 }
