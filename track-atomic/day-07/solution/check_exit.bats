@@ -9,6 +9,7 @@ setup() {
   [ "$status" -eq 2 ]
 }
 @test "agy with no args emits INVALID_ARGUMENT on stderr" {
-  run agy
+  bats_require_minimum_version 1.5.0
+  run --separate-stderr agy
   echo "$stderr" | jq -e '.code == "INVALID_ARGUMENT"'
 }

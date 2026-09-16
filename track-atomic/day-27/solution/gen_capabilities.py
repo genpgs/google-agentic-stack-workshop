@@ -33,12 +33,13 @@ def generate_tool(name, params):
 def validate_tool(tool):
     try:
         import jsonschema
+    except ImportError:
+        return []  # skip validation if jsonschema not installed
+    try:
         jsonschema.validate(instance=tool, schema=PARAM_SCHEMA)
         return []
     except jsonschema.ValidationError as e:
         return [str(e.message)]
-    except ImportError:
-        return []  # skip validation if jsonschema not installed
 
 if __name__ == "__main__":
     tool = generate_tool("search_files", ["query", "path"])

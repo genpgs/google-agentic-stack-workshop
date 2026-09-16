@@ -21,7 +21,11 @@ def run_single_bats(bats_file: Path, timeout: int = 60) -> dict:
     Never raises — always returns a result dict.
     """
     env = os.environ.copy()
-    env["PATH"] = str(MOCK_BIN) + ":" + env.get("PATH", "")
+    venv_bin = REPO_ROOT / ".venv" / "bin"
+    if venv_bin.exists():
+        env["PATH"] = f"{MOCK_BIN}:{venv_bin}:" + env.get("PATH", "")
+    else:
+        env["PATH"] = str(MOCK_BIN) + ":" + env.get("PATH", "")
     env["AGY_OFFLINE_MODE"] = "1"
 
     if not shutil.which("bats"):
